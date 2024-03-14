@@ -16,10 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('polls/', include("polls.urls")),
     # path('conmydB', include("connectMysql")),
     path('mysql/', include("connectMysql.urls"))
-]
+] + static(settings.STATIC_IMG_URL, document_root=settings.STATIC_IMG_ROOT)
