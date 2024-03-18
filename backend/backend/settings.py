@@ -150,7 +150,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 STATIC_IMG_URL = 'imgs/'
-STATIC_IMG_ROOT = os.path.join(BASE_DIR, 'polls/imgs/')
+STATIC_IMG_ROOT = os.path.join(BASE_DIR, 'static/imgs/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
