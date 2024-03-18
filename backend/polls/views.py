@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from os import path
 from django.http import HttpResponse, JsonResponse
 from django.middleware.csrf import get_token
 import json
@@ -7,7 +6,6 @@ import json
 from .handleFiles import handleUploadFile, writeChatJson, readChatJson
 
 # Create your views here.
-current_directory = path.dirname(path.abspath(__file__))
 
 
 def index(request):

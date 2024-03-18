@@ -1,10 +1,13 @@
 from os import path
 from os import makedirs
+from pathlib import Path
 
 import json
 import datetime
 
-current_directory = path.dirname(path.abspath(__file__))
+BASE_DIR = Path(__file__).resolve().parent.parent
+STATIC_IMG_ROOT = path.join(BASE_DIR, 'static/imgs/')
+STATIC_CHATJSON_ROOT = path.join(BASE_DIR, 'static/jsonChatData/')
 
 
 def readpicAmount(countPath):
@@ -22,7 +25,7 @@ def readpicAmount(countPath):
 
 
 def handleUploadFile(file, dirName, imgType):
-    dirPath = current_directory + '/imgs/' + dirName
+    dirPath = STATIC_IMG_ROOT + '/' + dirName
     existsDir = path.exists(dirPath)
     if not existsDir:
         makedirs(dirPath)
@@ -48,7 +51,7 @@ def handleUploadFile(file, dirName, imgType):
 def writeChatJson(data):
     today = datetime.date.today()
     jsonFileName = today.strftime('%y%m%d') + 'chatData' + '.json'
-    jsonFilePath = current_directory + "/jsonData/" + jsonFileName
+    jsonFilePath = STATIC_CHATJSON_ROOT + '/' + jsonFileName
 
     if not path.exists(jsonFilePath):
         f = open(jsonFilePath, 'w')
@@ -82,7 +85,14 @@ def writeChatJson(data):
 def readChatJson():
     today = datetime.date.today()
     jsonFileName = today.strftime('%y%m%d') + 'chatData' + '.json'
-    jsonFilePath = current_directory + "/jsonData/" + jsonFileName
+    jsonFilePath = STATIC_CHATJSON_ROOT + '/' + jsonFileName
+
+    if not path.exists(jsonFilePath):
+        f = open(jsonFilePath, 'w')
+        f.write('[]')
+        f.close()
+        return []
+
     f = open(jsonFilePath, 'r')
     tempStr = f.read()
     f.close()
