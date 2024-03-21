@@ -4,6 +4,7 @@ from django.middleware.csrf import get_token
 import json
 
 from .handleFiles import handleUploadFile, writeChatJson, readChatJson
+from .emailSending import sendingBy163
 
 # Create your views here.
 
@@ -50,3 +51,10 @@ def imgDataProcessing(request):
         writeChatJson(data)
 
     return HttpResponse("hello")
+
+
+def emailVerifiCode(request):
+    if request.method == "POST":
+        postEmail = request.POST['email']
+        sendingBy163(postEmail)
+        
