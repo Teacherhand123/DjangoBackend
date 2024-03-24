@@ -6,9 +6,13 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.core import serializers
 
-from .models import userInformation
+from .models import userInformation, userChatInformation
+
+from .emailSending import sendingBy163
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
+userTokenJsonPath = current_directory + "/userJsonData/userToken.json"
+registerJsonPath = current_directory + "/userJsonData/email.json"
 
 # Create your views here.
 
@@ -16,7 +20,7 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 def verifyLoginTime(request):
     if request.method == "POST":
         postJson = json.loads(request.body.decode())
-        f = open(current_directory + "/userJsonData/userToken.json")
+        f = open(userTokenJsonPath)
         tempStr = f.read()
         f.close()
         userTokens = json.loads(tempStr)
@@ -32,18 +36,19 @@ def verifyLoginTime(request):
 
         return JsonResponse({"error": "false", "username": userName}, safe=False)
 
+
 def verifyLogin(request):
     if request.method == "POST":
         postJson = json.loads(request.body.decode())
         try:
-            data = json.loads(serializers.serialize("json", userInformation.objects.filter(username=postJson["username"])))
+            data = json.loads(serializers.serialize("json", userChatInformation.objects.filter(username=postJson["username"])))
             # check if the same password
             if data[0]["fields"]["password"] == postJson["password"]:
 
                 # dm5 encode to token
                 dm5Encode = hashlib.md5(postJson["password"].encode()).hexdigest()
 
-                f = open(current_directory + "/userJsonData/userToken.json")
+                f = open(userTokenJsonPath)
                 tempStr = f.read()
                 f.close()
                 userTokens = json.loads(tempStr)
@@ -52,7 +57,6 @@ def verifyLogin(request):
                 # check if username has existed
                 for userData in userTokens:
                     if userData["username"] == postJson["username"]:
-                        print(userData)
                         isNull = False
                         userData["token"] = dm5Encode
 
@@ -62,7 +66,16 @@ def verifyLogin(request):
 
                 # write into .json
                 newTempStr = json.dumps(userTokens)
-                f = open(current_directory + "/userJsonData/userToken.json", 'w')
+
+                listTempStr = list(newTempStr)
+
+                for index in range(len(listTempStr)):
+                    if listTempStr[index] == ',':
+                        listTempStr[index] = ',\n'
+
+                newTempStr = ''.join(listTempStr)
+
+                f = open(userTokenJsonPath, 'w')
                 f.write(newTempStr)
                 f.close()
 
@@ -73,5 +86,57 @@ def verifyLogin(request):
 
 
 def createNewUser(request):
-    userInformation.objects.create(username="ComeFromDjangoAgain", password="123123Again")
-    return HttpResponse("Django insert data to mysql!")
+    if request.method == "POST":
+        postJson = json.loads(request.body.decode())
+        print(postJson)
+
+        # read emailJson
+        f = open(registerJsonPath)
+        tempStr = f.read()
+        f.close()
+        emailJson = json.loads(tempStr)
+
+        correctInformation = False
+
+        cancelIndex = -1
+
+        for index in range(len(emailJson)):
+            if postJson["emailcode"] == emailJson[index]["code"] and emailJson[index]["code"] != "-1":
+                cancelIndex = index
+                correctInformation = True
+                break
+
+        if correctInformation:
+            userChatInformation.objects.create(username=postJson["username"], password=postJson["password"], email=postJson["email"])
+
+            emailJson[cancelIndex]["code"] = "-1"
+
+            tempStr = json.dumps(emailJson)
+            tempStrList = list(tempStr)
+
+            for index in range(len(tempStrList)):
+                if tempStrList[index] == '}':
+                    tempStrList[index] = '}\n'
+
+            f = open(registerJsonPath, 'w')
+            f.write('')
+            f.close()
+
+            with open(registerJsonPath, 'a') as f:
+                f.writelines(tempStrList)
+
+            return JsonResponse({"error": "false", "description": "register success"}, safe=False)
+
+        return JsonResponse({"error": "true", "description": "email code error"}, safe=False)
+
+    return JsonResponse({"error": "true", "description": "none"}, safe=False)
+
+
+def emailVerifiCode(request):
+    if request.method == "POST":
+        postJson = json.loads(request.body.decode())
+        postEmail = postJson["email"]
+        # wait for response
+        resp = sendingBy163(postEmail)
+        return JsonResponse(resp, safe=False)
+    return HttpResponse.status_code(500)
